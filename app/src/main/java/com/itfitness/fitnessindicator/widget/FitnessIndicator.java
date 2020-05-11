@@ -54,6 +54,7 @@ public class FitnessIndicator extends FrameLayout {
 
     public FitnessIndicator(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        setVisibility(INVISIBLE);
         init();
 
     }
@@ -98,13 +99,36 @@ public class FitnessIndicator extends FrameLayout {
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                LogUtils.eTag("滑动",positionOffset);
-                imageView.setTranslationX(positionOffset );
+                LogUtils.eTag("滑动",positionOffset,position);
+                if(mIsLayout){
+//                    int nextPos = position+1;
+//                    if(nextPos<indicatorDatas.size()-1){
+//                        View current = linearLayout.getChildAt(position);
+//                        View next = linearLayout.getChildAt(nextPos);
+//
+//                        float v1 = (float) current.getWidth() / 2 + (float)imageView.getMeasuredWidth()/2;
+//                        float v = (float) current.getWidth() / 2 + (float) next.getWidth() / 2;
+//                        LogUtils.eTag("滑动2",current.getWidth(),next.getWidth());
+//                        imageView.setTranslationX(v1+positionOffset*v);
+//                    }
+                }
             }
 
             @Override
             public void onPageSelected(int position) {
                 updateItemStatus(position);
+                int preWidth = 0;//indicator前面的宽度
+                for(int i = 0 ; i < position+1 ; i++){
+                    View childAt = linearLayout.getChildAt(i);
+                    int width = childAt.getWidth();
+                    if(i == position){
+                        preWidth+=width/2;
+                    }else {
+                        preWidth+=width;
+                    }
+                }
+                int left = preWidth - imageView.getWidth()/2;
+                imageView.setTranslationX(left);
             }
 
             @Override
@@ -143,9 +167,22 @@ public class FitnessIndicator extends FrameLayout {
                 itemImpl.setItemText(indicatorDatas.get(i));
             }
             LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
-            layoutParams.leftMargin = ConvertUtils.dp2px(15);
-            layoutParams.rightMargin = ConvertUtils.dp2px(15);
+            itemView.setPadding(ConvertUtils.dp2px(15),0,ConvertUtils.dp2px(15),0);
+//            layoutParams.leftMargin = ConvertUtils.dp2px(15);
+//            layoutParams.rightMargin = ConvertUtils.dp2px(15);
             itemView.setLayoutParams(layoutParams);
+            if(i == 0){
+                itemView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        float measuredWidth = (float)itemView.getMeasuredWidth();
+                        float measuredWidthImg = (float)imageView.getMeasuredWidth();
+                        LogUtils.eTag("宽度",measuredWidth);
+                        imageView.setTranslationX(measuredWidth/2-measuredWidthImg/2);
+                        setVisibility(VISIBLE);
+                    }
+                });
+            }
             linearLayout.addView(itemView);
         }
     }
